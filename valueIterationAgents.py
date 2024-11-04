@@ -161,7 +161,27 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
         ValueIterationAgent.__init__(self, mdp, discount, iterations)
 
     def runValueIteration(self):
-        "*** YOUR CODE HERE ***"
+        states = self.mdp.getStates()  
+        num_states = len(states)
+        state_index = 0 #which state to update
+
+        for iteration in range(self.iterations):
+            state = states[state_index]
+
+            if not self.mdp.isTerminal(state):
+                max_value = float('-inf') #get max q value
+                for action in self.mdp.getPossibleActions(state):
+                    q_value = self.computeQValueFromValues(state, action)
+                    max_value = max(max_value, q_value)
+                
+                self.values[state] = max_value
+            
+            #go to next state
+            state_index += 1
+  
+            #once at end of list, go back to start - chatGPT helped me debug this as I was missing this restart for the subsequent iteration
+            if state_index >= num_states:
+                state_index = 0
 
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     """
