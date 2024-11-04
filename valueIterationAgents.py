@@ -63,6 +63,18 @@ class ValueIterationAgent(ValueEstimationAgent):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
 
+        for iteration in range(self.iterations):
+            new_values = self.values.copy() #chatGPT helped me figure out storing the copies - was editing directly and giving me issues
+            for state in self.mdp.getStates():
+                if self.mdp.isTerminal(state):
+                    continue  #skip terminal states
+                max_value = float('-inf')
+                for action in self.mdp.getPossibleActions(state):
+                    q_value = self.getQValue(state, action)
+                    max_value = max(max_value, q_value)
+                new_values[state] = max_value
+            self.values = new_values  
+
 
     def getValue(self, state):
         """
@@ -77,6 +89,14 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
+
+        #equation from class slide
+        q_value = 0
+        for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+            reward = self.mdp.getReward(state, action, nextState)
+            q_value += prob * (reward + self.discount * self.values[nextState])
+        return q_value
+
         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
@@ -89,6 +109,18 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
+
+        if self.mdp.isTerminal(state):
+            return None  
+        best_action = None
+        best_value = float('-inf')
+        for action in self.mdp.getPossibleActions(state):
+            q_value = self.getQValue(state, action)
+            if q_value > best_value:
+                best_value = q_value
+                best_action = action
+        return best_action
+
         util.raiseNotDefined()
 
     def getPolicy(self, state):
