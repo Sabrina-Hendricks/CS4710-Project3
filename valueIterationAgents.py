@@ -203,3 +203,46 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
 
+        #1 - Compute predecessors for all states
+        predecessors = {}
+        for state in self.mdp.getStates():
+            predecessors[state] = set()
+
+        for state in self.mdp.getStates():
+            if not self.mdp.isTerminal(state):
+                for action in self.mdp.getPossibleActions(state):
+                    for nextState, prob in self.mdp.getTransitionStatesAndProbs(state, action):
+                        if prob > 0:
+                            predecessors[nextState].add(state)
+
+        #2 - Initialize the priority queue
+        priority_queue = util.PriorityQueue()
+
+        for state in self.mdp.getStates():
+            if not self.mdp.isTerminal(state):
+                max_q_value = max([self.computeQValueFromValues(state, action)
+                                   for action in self.mdp.getPossibleActions(state)]) #chatGPT helped me condense finding the max q value
+                diff = abs(self.values[state] - max_q_value)
+                priority_queue.push(state, -diff)
+
+        #3 - Perform iterations to update the values
+        for iteration in range(self.iterations):
+            if priority_queue.isEmpty():
+                break
+
+            state = priority_queue.pop()
+
+            if not self.mdp.isTerminal(state):
+                max_q_value = max([self.computeQValueFromValues(state, action)
+                                   for action in self.mdp.getPossibleActions(state)])
+                self.values[state] = max_q_value
+            
+            #4 - Update all predecessors of the popped state
+            for p in predecessors[state]:
+
+                max_q_value = max([self.computeQValueFromValues(p, action)
+                                   for action in self.mdp.getPossibleActions(p)])
+                diff = abs(self.values[p] - max_q_value)
+
+                if diff > self.theta:
+                    priority_queue.update(p, -diff)
